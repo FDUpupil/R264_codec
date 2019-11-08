@@ -89,7 +89,7 @@ void CABAD::readMbTypeInfos(ColourComponent compID) /// read 1~7 bits
          mb[compID].transformSize8x8Flag = 0;
 
         binVal = biariDecodeTerminate(compID);
-        //cbpLuma
+        //cbpLuma AC
         ctxIdx = ContextModelSet::getCtxIdxForMbType(sliceType, refFlags[compID].nonIntraNxN, 2);
         cbpLumaACFlag = biariDecodeRegular(compID, ctxIdx);
 		cbpLuma[compID] = cbpLumaACFlag ? 0xF : 0x0;
@@ -127,15 +127,15 @@ void CABAD::readTransformSize8x8FlagInfos(ColourComponent compID) /// read 1 bit
 
 void CABAD::readIntraNxNPredModeInfos(ColourComponent compID) /// read modeCount * 1~4 bits
 {
-    uint8_t modeCount = (mb[COLOUR_COMPONENT_Y].mbPart == INTRA_PARTITION_4x4) ? 16 : 4;
+    uint8_t modeCount = (mb[compID].mbPart == INTRA_PARTITION_4x4) ? 16 : 4;
     uint16_t ctxIdx;
     for (int idx = 0; idx < modeCount; ++idx) {
         ctxIdx = ContextModelSet::getCtxIdxForPrevIntraNxNPredModeFlag();
-        mb[COLOUR_COMPONENT_Y].prevIntraPredModeFlag[idx] = biariDecodeRegular(compID, ctxIdx);
+        mb[compID].prevIntraPredModeFlag[idx] = biariDecodeRegular(compID, ctxIdx);
 
-        if (!mb[COLOUR_COMPONENT_Y].prevIntraPredModeFlag[idx]){
+        if (!mb[compID].prevIntraPredModeFlag[idx]){
             ctxIdx = ContextModelSet::getCtxIdxForRemIntraNxNPredMode();
-            mb[COLOUR_COMPONENT_Y].remIntraPredMode[idx] = biariDecodeFixedlLength(compID, 3, ctxIdx);
+            mb[compID].remIntraPredMode[idx] = biariDecodeFixedlLength(compID, 3, ctxIdx);
         }    
     }
 }
@@ -260,7 +260,7 @@ void CABAD::readLumaCoefsInfos(ColourComponent compID, ColourComponent planeID)
             readBlkCoefs(compID, ctxCompID, CODED_BLOCK_LUMA_DC, mb[planeID].coefs.blk16x16.dc);
 
         // Decode AC coefficient;
-        if(cbpLuma)
+        if(cbpLuma[compID])
             for(uint8_t idx = 0; idx < 16; ++idx) {
                 ctxIdx = ContextModelSet::getCtxIdxForCodedBlockFlag(
                     ctxCompID, CODED_BLOCK_LUMA_AC,

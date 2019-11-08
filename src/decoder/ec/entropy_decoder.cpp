@@ -84,7 +84,7 @@ void EntropyDecoder::readSliceDataInfos(ColourComponent compID)
     if (mb[compID].mbPart != INTRA_PARTITION_16x16)
         readCodedBlockPatternInfos(compID);
 
-    if(cbpLuma ||
+    if(cbpLuma[compID] ||
         ((chromaFormat == CHROMA_FORMAT_420 || chromaFormat == CHROMA_FORMAT_422) && cbpChroma) ||
         mb[compID].mbPart == INTRA_PARTITION_16x16) {
             readMbQPDeltaInfos(compID);
