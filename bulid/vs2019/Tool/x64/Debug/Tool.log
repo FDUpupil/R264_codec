@@ -1,0 +1,8 @@
+﻿  annex_b.cpp
+E:\WORK\git\R264\R264_codec\src\tools\bitstream\annex_b.cpp(56,26): warning C4267:  “return”: 从“size_t”转换到“uint32_t”，可能丢失数据
+  bitstream.cpp
+  macroblock_converter.cpp
+  raw_image.cpp
+  正在生成代码...
+E:\WORK\git\R264\R264_codec\src\tools\bitstream\annex_b.cpp(62,75): warning C4267:  “=”: 从“size_t”转换到“uint32_t”，可能丢失数据
+  Tool.vcxproj -> E:\WORK\git\R264\R264_codec\bulid\vs2019\x64\Debug\Tool.lib

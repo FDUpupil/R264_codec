@@ -9,8 +9,8 @@ public:
 
 protected:
 
-    virtual void estimate();
-    virtual void decidePartition();
+	virtual void estimate() {};
+	virtual void decidePartition() {};
     
     void reconstructure();
     void reconstructure4x4(ColourComponent compID);
