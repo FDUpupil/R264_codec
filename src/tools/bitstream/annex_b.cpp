@@ -28,10 +28,10 @@ uint32_t Annex_b::getNalu(Bitstream &nalu)
     }
 
     if((nextstartcode == 0) && iseof){
-        printf("dont find start code!");
+        printf("cant find start code!");
 		return 0;
     }
-        
+    
     while(!iseof){
 		nalubuf.emplace_back(getfbtye());
         if(findStartcode(nalubuf,3)){

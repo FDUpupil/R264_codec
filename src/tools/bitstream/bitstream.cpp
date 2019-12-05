@@ -27,7 +27,7 @@ void Bitstream::align()
 		lengthLeft = 8;
 		if(bufiter != (buf.end() - 1)){
 			bufiter++;
-			printf("byte : %x \n", *bufiter);
+			//printf("byte : %x \n", *bufiter);
 		}
 	}
 }

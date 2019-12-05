@@ -1,17 +1,18 @@
 #ifndef _SYS_CTRL_H_
 #define _SYS_CTRL_H_
 
-#include "common/cfgtype.h"
+#include "common/codec_type.h"
 
 class SysCtrl {
 public:
-    SysCtrl(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg);
+    SysCtrl(const PictureLevelConfig &cfgPic);
 
-    void init(const SliceLevelConfig &slicCfg);
-    void getNextMbInfo(MacroblockInfo &mbInfo);
-    void prepareNextMb(EncodedMb *mbEnc);
+    void init(const SliceLevelConfig &cfgSlic);
+    void getCurMbInfo(MacroblockInfo &mbInfo);
+    void resetMbBuffer(EncodedMb *mbDec);
     void storeCurMbInfo(MacroblockInfo &mbInfo);
     bool hasNextMb() const;
+    void setNextMb();
     void update(const EncodedMb *mbEnc);
 
 private:

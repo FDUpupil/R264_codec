@@ -18,7 +18,7 @@ uint8_t ArithDecEngine::decodeRegular(uint8_t bitMPS, uint8_t rangeLPS)
 {
     uint8_t bit = bitMPS;
     range -= rangeLPS;
-	printf("value: %x bitleft: %d\n", value, bitleft);
+	//printf("value: %x bitleft: %d\n", value, bitleft);
 	//printf("range: %x\n", range);
 	//printf("bitleft: %d\n", bitleft);
     if(value < (range << bitleft)){

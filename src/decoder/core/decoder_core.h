@@ -6,7 +6,7 @@
 #include "decoder/intra/intra_base.h"
 #include "decoder/ec/cabad.h"
 #include "tools/bitstream/bitstream.h"
-#include "common/cfgtype.h"
+#include "common/codec_type.h"
 #include "mem_ctrl.h"
 
 
@@ -17,22 +17,23 @@
 
 class DecoderCore {
 public: 
-    DecoderCore(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg);
+    DecoderCore(const PictureLevelConfig &cfgPic);
     ~DecoderCore();
 
-    void decode(const SliceLevelConfig &sliCfg, std::unique_ptr<BlockyImage> &recFrame, Bitstream *sodb);
+    void decode(const SliceLevelConfig &cfgSlic, std::unique_ptr<BlockyImage> &recFrame, Bitstream *sodb);
 
 private:
     SysCtrl *sysCtrl;
     MemCtrl *memCtrl;
-    IntraBase *intra;
+    IntraBase *rec;
     EntropyDecoder *ed;
 
     MacroblockInfo mbInfo;
-    MemCtrlToIntra intraIn;
-    IntraToMemCtrl intraOut;
+    MemCtrlToRec recIn;
+    RecToMemCtrl recOut;
     MemCtrlToEC ecIn;
     ECToMemCtrl ecOut;
+
     EncodedMb mb[COLOUR_COMPONENT_COUNT];
 
     void runCycles();

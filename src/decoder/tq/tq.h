@@ -34,6 +34,13 @@ public:
         ColourComponent compID, const Blk<ResType, 4, 4> (&rawRes)[4][2],
         CompCoefs::Blk16x16Type &coefs, Blk<ResType, 4, 4> (&recRes)[4][2]) const;
 
+    ///
+    void inverse4x4(ColourComponent planeID, CoefType coefs[16], Blk<ResType, 4, 4> &recRes) const;
+    void inverse8x8(ColourComponent planeID, CoefType coefs[64], Blk<ResType, 8, 8> &recRes) const;
+    void inverse16x16(ColourComponent planeID, CompCoefs::Blk16x16Type &coefs, Blk<ResType, 4, 4> (&recRes)[4][4]) const;
+    void inverseChroma(ColourComponent planeID, CompCoefs::Blk16x16Type &coefs, Blk<ResType, 4, 4> (&recRes)[2][2]) const;
+    void inverseChroma(ColourComponent planeID, CompCoefs::Blk16x16Type &coefs, Blk<ResType, 4, 4> (&recRes)[4][2]) const;
+
 private:
     ChromaArrayType chromaFormat;
     uint8_t bitDepthY;

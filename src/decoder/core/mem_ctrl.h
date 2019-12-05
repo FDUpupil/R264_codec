@@ -1,7 +1,7 @@
 #ifndef __MEM_CTRL_H__
 #define __MEM_CTRL_H__
 
-#include"common/cfgtype.h"
+#include"common/codec_type.h"
 #include"common/block.h"
 #include"common/type.h"
 #include"tools/image/blocky_image.h"
@@ -13,10 +13,10 @@
 
 class MemCtrl {
 public:
-    MemCtrl(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg);
+    MemCtrl(const PictureLevelConfig &cfgPic);
     ~MemCtrl();
 
-    void init(const SliceLevelConfig &sliCfg);
+    void init(const SliceLevelConfig &cfgSlic);
     void cycle();
     void requireOrgFrame(std::unique_ptr<BlockyImage> _orgFrame);
     void requireRecFrame(std::unique_ptr<BlockyImage> _recFrame);
@@ -24,6 +24,9 @@ public:
     std::unique_ptr<BlockyImage> releaseRecFrame();
 
     void getIntraMemory(MemCtrlToIntra &memIn, IntraToMemCtrl &memOut);
+    //REC
+    void getRecMemory(MemCtrlToRec &memIn, RecToMemCtrl &memOut);
+
     void getECMemory(MemCtrlToEC &memIn, ECToMemCtrl &memOut);
     void getDbMemory(MemCtrlToDb &memIn, DbToMemCtrl &memOut);
     void updateIntraMemory();
@@ -43,6 +46,9 @@ private:
 
     uint16_t xInMbs;
     uint16_t yInMbs;
+
+    //uint8_t mbWC;
+    //uint8_t mbHC;
 
     std::unique_ptr<BlockyImage> orgFrame;
     std::unique_ptr<BlockyImage> recFrame;
@@ -104,6 +110,8 @@ private:
     void updateIntraPredModes();
     void updateCAVLCMemory();
     void updateCABACMemory();
+
+    void getRecRefPixel();
 };
 
 #endif

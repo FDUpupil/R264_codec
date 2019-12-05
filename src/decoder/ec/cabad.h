@@ -10,10 +10,10 @@
 
 class CABAD : public EntropyDecoder {
 public:
-    CABAD(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg);
+    CABAD(const PictureLevelConfig &cfgPic);
     ~CABAD();
 
-    virtual void init(const SliceLevelConfig &sliCfg, Bitstream *bs);
+    virtual void init(const SliceLevelConfig &cfgSlic, Bitstream *bs);
 
 private:
     ContextModelSet *ctxModel;

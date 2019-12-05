@@ -55,6 +55,14 @@ inline void DiffBlock(const Blk<T1, width, height> &org, const Blk<T1, width, he
             res[y][x] = T2(org[y][x] - pred[y][x]);
 }
 
+// template <int width, int height, typename T1, typename T2>
+// inline void SumBlock(const Blk<T1, width, height> &pred, const Blk<T2, width, height> &res, Blk<T1, width, height> &org)
+// {
+//     for (int y = 0; y < height; ++y)
+//         for (int x = 0; x < width; ++x)
+//             org[y][x] = T1(T2(pred[y][x]) + res[y][x]);
+// }
+
 template <int width, int height, typename T1, typename T2>
 inline void RestoreBlock(const Blk<T1, width, height> &pred, const Blk<T2, width, height> &res, Blk<T1, width, height> &rec, uint8_t bitDepth)
 {
@@ -132,28 +140,35 @@ inline void ScanZigZag8x8(const Blk<T, 8, 8> &blk, T *seq, uint8_t startIdx = 0,
 }
 
 template <typename T>
-inline void InvScanZigZag2x2(const T *seq, const Blk<T, 2, 2> &blk, uint8_t startIdx = 0, uint8_t endIdx = 3)
+inline void ScanZigZag8x8(T* seq, Blk<T, 8, 8> & blk, uint8_t startIdx = 0, uint8_t endIdx = 63)
+{
+	for (uint8_t i = startIdx; i <= endIdx; ++i)
+		blk[ZigZag8x8[i].y][ZigZag8x8[i].x] = * seq++;
+}
+
+template <typename T>
+inline void InvScanZigZag2x2(const T *seq, Blk<T, 2, 2> &blk, uint8_t startIdx = 0, uint8_t endIdx = 3)
 {
     for (uint8_t i = startIdx; i <= endIdx; ++i)
         blk[ZigZag2x2[i].y][ZigZag2x2[i].x] = *seq++;
 }
 
 template <typename T>
-inline void InvScanZigZag2x4(const T *seq, const Blk<T, 2, 4> &blk, uint8_t startIdx = 0, uint8_t endIdx = 7)
+inline void InvScanZigZag2x4(const T *seq, Blk<T, 2, 4> &blk, uint8_t startIdx = 0, uint8_t endIdx = 7)
 {
     for (uint8_t i = startIdx; i <= endIdx; ++i)
         blk[ZigZag2x4[i].y][ZigZag2x4[i].x] = *seq++;
 }
 
 template <typename T>
-inline void InvScanZigZag4x4(const T *seq, const Blk<T, 4, 4> &blk, uint8_t startIdx = 0, uint8_t endIdx = 15)
+inline void InvScanZigZag4x4(const T *seq, Blk<T, 4, 4> &blk, uint8_t startIdx = 0, uint8_t endIdx = 15)
 {
     for (uint8_t i = startIdx; i <= endIdx; ++i)
         blk[ZigZag4x4[i].y][ZigZag4x4[i].x] = *seq++;
 }
 
 template <typename T>
-inline void InvScanZigZag8x8(const T *seq, const Blk<T, 8, 8> &blk, uint8_t startIdx = 0, uint8_t endIdx = 63)
+inline void InvScanZigZag8x8(const T *seq, Blk<T, 8, 8> &blk, uint8_t startIdx = 0, uint8_t endIdx = 63)
 {
     for (uint8_t i = startIdx; i <= endIdx; ++i)
         blk[ZigZag8x8[i].y][ZigZag8x8[i].x] = *seq++;

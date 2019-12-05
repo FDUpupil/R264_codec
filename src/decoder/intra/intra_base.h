@@ -2,7 +2,7 @@
 #define __INTRA_BASE_H__
 
 #include "common/intra.h"
-#include "common/cfgtype.h"
+#include "common/codec_type.h"
 #include "decoder/tq/tq.h"
 
 
@@ -13,11 +13,13 @@
 
 class IntraBase {
 public:
-    IntraBase(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg);
+    IntraBase(const PictureLevelConfig &cfgPic);
     virtual ~IntraBase() {}
 
-    void init(const SliceLevelConfig &sliCfg);
+    void init(const SliceLevelConfig &cfgSic);
     virtual void cycle(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn, EncodedMb *mbDec, const IntraToMemCtrl &memOut);
+    ///
+    virtual void cycle(const MacroblockInfo &mbInfo, const MemCtrlToRec &memIn, EncodedMb *mbDec, const RecToMemCtrl &memOut);
 
 protected:
     Intra4x4Predictor *pred4x4[COLOUR_COMPONENT_COUNT];
@@ -31,8 +33,6 @@ protected:
     ChromaArrayType chromaFormat;
     uint8_t bitDepthY;
     uint8_t bitDepthC;
-
-    uint8_t pic_init_qp;
 
     bool separateColourPlaneFlag;
     bool transform8x8ModeFlag;
@@ -122,6 +122,16 @@ protected:
     void encodeTransformSize8x8Flag(ColourComponent compID);
     void encodeNonZeroFlags(ColourComponent planeID);
     void encodeQP(ColourComponent compID);
+
+    /// 
+    void start(const MacroblockInfo &mbInfo, const MemCtrlToRec &memIn, EncodedMb *mbDec, const RecToMemCtrl &memOut);
+    void preprocess_rec();
+    void setPredModes();
+    void setPredModes4x4(ColourComponent planeID);
+    void setPredModes8x8(ColourComponent planeID);
+    void setPredModes16x16(ColourComponent planeID);
+    virtual void reconstructure() = 0;
+
 };
 
 inline int IntraBase::getNeighbourState8x8(uint8_t xInSbs, uint8_t yInSbs) const

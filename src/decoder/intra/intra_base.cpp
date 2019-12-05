@@ -1,16 +1,16 @@
 #include "intra_base.h"
+#include <iostream>
 
 #include <exception>
 
-IntraBase::IntraBase(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg)
+IntraBase::IntraBase(const PictureLevelConfig &cfgPic)
     : tq(
-        seqCfg.chroma_format_idc, seqCfg.bit_depth_luma_minus8+8, seqCfg.bit_depth_chroma_minus8+8,
-        picCfg.chroma_qp_index_offset, picCfg.second_chroma_qp_index_offset),
-      chromaFormat(seqCfg.chroma_format_idc),
-      pic_init_qp(picCfg.pic_init_qp_minus26 + 26),
-      bitDepthY(seqCfg.bit_depth_luma_minus8+8), bitDepthC(seqCfg.bit_depth_chroma_minus8+8),
-      separateColourPlaneFlag(seqCfg.separate_colour_plane_flag),
-      transform8x8ModeFlag(picCfg.transform_8x8_mode_flag)
+        (ChromaArrayType)cfgPic.chromaFormat, cfgPic.bitDepthY, cfgPic.bitDepthC,
+        cfgPic.chromaQPIndexOffset, cfgPic.secondChromaQPIndexOffset),
+      chromaFormat(cfgPic.chromaFormat),
+      bitDepthY(cfgPic.bitDepthY), bitDepthC(cfgPic.bitDepthC),
+      separateColourPlaneFlag(cfgPic.separateColourPlaneFlag),
+      transform8x8ModeFlag(cfgPic.transform8x8ModeFlag)
 {
     compCount = (uint8_t)(separateColourPlaneFlag ? COLOUR_COMPONENT_COUNT : 1);
     planeCount = (uint8_t)((chromaFormat != CHROMA_FORMAT_400) ? COLOUR_COMPONENT_COUNT : 1);
@@ -27,39 +27,38 @@ IntraBase::IntraBase(const SequenceLevelConfig &seqCfg, const PictureLevelConfig
             predChroma[planeID - 1] = nullptr;
         }
     } else {
-        for (int planeID = COLOUR_COMPONENT_CB; planeID <= COLOUR_COMPONENT_CR; ++planeID) {
-            pred4x4[planeID] = nullptr;
-            pred8x8[planeID] = nullptr;
-            pred16x16[planeID] = nullptr;
-            predChroma[planeID - 1] = new IntraChromaPredictor(chromaFormat, bitDepthC);
+		if (chromaFormat != CHROMA_FORMAT_400)
+			for (int planeID = COLOUR_COMPONENT_CB; planeID <= COLOUR_COMPONENT_CR; ++planeID) {
+				pred4x4[planeID] = nullptr;
+				pred8x8[planeID] = nullptr;
+				pred16x16[planeID] = nullptr;
+				predChroma[planeID - 1] = new IntraChromaPredictor(chromaFormat, bitDepthC);
         }
     }
 
-    tq.setScalingMatrices(*picCfg.scalingMatrix4x4Intra, *picCfg.scalingMatrix8x8Intra);
+    tq.setScalingMatrices(*cfgPic.scalingMatrix4x4Intra, *cfgPic.scalingMatrix8x8Intra);
 }
 
-void IntraBase::init(const SliceLevelConfig &sliCfg)
+void IntraBase::init(const SliceLevelConfig &cfgSlic)
 {
-    sliceType = sliCfg.slice_type;
+    sliceType = cfgSlic.sliceType;
 
-    sliceQP = pic_init_qp + sliCfg.slice_qp_delta;
-
-    if (chromaFormat != CHROMA_FORMAT_444 || !separateColourPlaneFlag)
-        tq.init(sliceQP);
+    if (!separateColourPlaneFlag)
+        tq.init(cfgSlic.sliceQP[COLOUR_COMPONENT_Y]);
     else
         tq.init(
-            sliceQP,
-            sliceQP,
-            sliceQP);
+            cfgSlic.sliceQP[COLOUR_COMPONENT_Y],
+            cfgSlic.sliceQP[COLOUR_COMPONENT_CB],
+            cfgSlic.sliceQP[COLOUR_COMPONENT_CR]);
     
     tq.setBiasFactor(QUANTIZER_FLAT_BIAS);
 
     if (!separateColourPlaneFlag) {
-        lastMbQP[COLOUR_COMPONENT_Y] = sliceQP;
+        lastMbQP[COLOUR_COMPONENT_Y] = cfgSlic.sliceQP[COLOUR_COMPONENT_Y];
     } else {
-        lastMbQP[COLOUR_COMPONENT_Y]  = sliceQP;
-        lastMbQP[COLOUR_COMPONENT_CB] = sliceQP;
-        lastMbQP[COLOUR_COMPONENT_CR] = sliceQP;
+        lastMbQP[COLOUR_COMPONENT_Y]  = cfgSlic.sliceQP[COLOUR_COMPONENT_Y];
+        lastMbQP[COLOUR_COMPONENT_CB] = cfgSlic.sliceQP[COLOUR_COMPONENT_CB];
+        lastMbQP[COLOUR_COMPONENT_CR] = cfgSlic.sliceQP[COLOUR_COMPONENT_CR];
     }
 }
 
@@ -76,6 +75,18 @@ void IntraBase::cycle(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn,
     finish(mbInfo, memIn, mbEncoded, memOut);
 }
 
+/// used for rec in decoder
+void IntraBase::cycle(const MacroblockInfo &mbInfo, const MemCtrlToRec &memIn, EncodedMb *mbDec, const RecToMemCtrl &memOut)
+{
+    start(mbInfo, memIn, mbDec, memOut);
+
+    preprocess_rec();
+    setPredModes();
+    reconstructure();
+
+
+}
+
 void IntraBase::start(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn, EncodedMb *mbEncoded, const IntraToMemCtrl &memOut)
 {
     // MacroblockInfo
@@ -83,11 +94,13 @@ void IntraBase::start(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn,
     yInMbs = mbInfo.yInMbs;
     neighbour = mbInfo.neighbour;
     mbQP[COLOUR_COMPONENT_Y] = mbInfo.mbQP[COLOUR_COMPONENT_Y];
+    
     if (separateColourPlaneFlag) {
         mbQP[COLOUR_COMPONENT_CB] = mbInfo.mbQP[COLOUR_COMPONENT_CB];
         mbQP[COLOUR_COMPONENT_CR] = mbInfo.mbQP[COLOUR_COMPONENT_CR];
     }
 
+    
     // MemCtrlToIntra
     orgMb = memIn.orgMb;
     refPixels = memIn.refPixels;
@@ -99,6 +112,33 @@ void IntraBase::start(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn,
     // IntraToMemCtrl
     recMb = memOut.recMb;
     predModes = memOut.predModes;
+}
+
+///
+void IntraBase::start(const MacroblockInfo &mbInfo, const MemCtrlToRec &memIn, EncodedMb *mbDec, const RecToMemCtrl &memOut)
+{
+    // MacroblockInfo
+    xInMbs = mbInfo.xInMbs;
+    yInMbs = mbInfo.yInMbs;
+    neighbour = mbInfo.neighbour;
+    
+    mbQP[COLOUR_COMPONENT_Y] = mbDec[COLOUR_COMPONENT_Y].qp;
+    if (separateColourPlaneFlag) {
+        mbQP[COLOUR_COMPONENT_CB] = mbDec[COLOUR_COMPONENT_CB].qp;
+        mbQP[COLOUR_COMPONENT_CR] = mbDec[COLOUR_COMPONENT_CR].qp;
+    }
+
+    // MemCtrToRec
+    refPixels = memIn.refPixels;
+    refModes = memIn.refModes;
+
+    // DecodeMb
+    mbEnc = mbDec;
+
+    // RecToMemCtrl
+    recMb = memOut.recMb;
+    predModes = memOut.predModes;
+
 }
 
 void IntraBase::finish(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn, EncodedMb *mbEncoded, const IntraToMemCtrl &memOut)
@@ -151,6 +191,34 @@ void IntraBase::preprocess()
         for (uint8_t xInSbs = 0; xInSbs < 2; ++xInSbs)
             neighbour8x8[yInSbs][xInSbs] = getNeighbourState8x8(xInSbs, yInSbs);
     
+    neighbour16x16 = getNeighbourState16x16();
+    neighbourChroma = getNeighbourStateChroma();
+}
+
+///
+void IntraBase::preprocess_rec()
+{
+    if (!separateColourPlaneFlag)
+        tq.updateMacroblockQP(mbQP[COLOUR_COMPONENT_Y]);
+    else
+        tq.updateMacroblockQP(
+            mbQP[COLOUR_COMPONENT_Y],
+            mbQP[COLOUR_COMPONENT_CB],
+            mbQP[COLOUR_COMPONENT_CR]
+        );
+
+    for (uint8_t yInSbs = 0; yInSbs < 4; ++yInSbs)
+        for (uint8_t xInSbs = 0; xInSbs < 4; ++xInSbs)
+            neighbour4x4[yInSbs][xInSbs] = getNeighbourState4x4(xInSbs, yInSbs);
+
+    for (uint8_t yInSbs = 0; yInSbs < 2; ++yInSbs)
+        for (uint8_t xInSbs = 0; xInSbs < 2; ++xInSbs)
+            neighbour8x8[yInSbs][xInSbs] = getNeighbourState8x8(xInSbs, yInSbs);
+    
+    // for (uint8_t yInSbs = 0; yInSbs < 2; ++yInSbs)
+    //     for (uint8_t xInSbs = 0; xInSbs < 2; ++xInSbs)
+    //         printf("neighbour: %x\n", neighbour8x8[yInSbs][xInSbs]);
+
     neighbour16x16 = getNeighbourState16x16();
     neighbourChroma = getNeighbourStateChroma();
 }
@@ -239,7 +307,8 @@ void IntraBase::setRefPixels4x4(ColourComponent planeID, const Blk<PixType, 16, 
             for (uint8_t xOfSbs = 0; xOfSbs < xLen; ++xOfSbs)
                 ref.u[xOfSbs] = recComp[yO - 1][xO + xOfSbs];
     }
-
+    
+    //printf("neighbour : %x \n", nb);
     pred4x4[planeID]->setRefPixels(nb, ref);
 }
 
@@ -279,7 +348,7 @@ void IntraBase::setRefPixels8x8(ColourComponent planeID, const Blk<PixType, 16, 
             for (uint8_t xOfSbs = 0; xOfSbs < xLen; ++xOfSbs)
                 ref.u[xOfSbs] = recComp[yO - 1][xO + xOfSbs];
     }
-
+    //printf("neighbour : %x \n", nb);
     pred8x8[planeID]->setRefPixels(nb, ref);
 }
 
@@ -604,4 +673,91 @@ void IntraBase::encodeQP(ColourComponent compID)
     }
 
     mbEnc[compID].qpUpdated = qpUpdated;
+}
+
+void IntraBase::setPredModes()
+{
+    switch(mbEnc[COLOUR_COMPONENT_Y].mbPart) {
+        case INTRA_PARTITION_4x4:
+            setPredModes4x4(COLOUR_COMPONENT_Y);
+            break;
+
+        case INTRA_PARTITION_8x8:
+            setPredModes8x8(COLOUR_COMPONENT_Y);
+            break;
+
+        case INTRA_PARTITION_16x16:
+            setPredModes16x16(COLOUR_COMPONENT_Y);
+            break;
+    }
+    if(separateColourPlaneFlag) {
+        for(int planeID = COLOUR_COMPONENT_CB; planeID < COLOUR_COMPONENT_COUNT; ++planeID) {
+            switch(mbEnc[planeID].mbPart) {
+                case INTRA_PARTITION_4x4:
+                    setPredModes4x4((ColourComponent)planeID);
+                    break;
+
+                case INTRA_PARTITION_8x8:
+                    setPredModes8x8((ColourComponent)planeID);
+                    break;
+
+                case INTRA_PARTITION_16x16:
+                    setPredModes16x16((ColourComponent)planeID);
+                    break;
+            }
+        }
+    } 
+}
+
+void IntraBase::setPredModes4x4(ColourComponent planeID)
+{
+    for(uint8_t idx = 0; idx < 16; ++idx) {
+        uint8_t xInSbs = (uint8_t)MacroblockInvScan4x4[idx].x;
+        uint8_t yInSbs = (uint8_t)MacroblockInvScan4x4[idx].y;
+        int predIntra4x4PredMode = getPredIntra4x4PredMode(planeID, xInSbs, yInSbs); 
+        //printf("predmode : %d \n", predIntra4x4PredMode);
+
+        if(mbEnc[planeID].prevIntraPredModeFlag[idx])
+            predModes4x4[planeID][yInSbs][xInSbs] = (Intra4x4PredMode)predIntra4x4PredMode;
+        else
+            predModes4x4[planeID][yInSbs][xInSbs] = (Intra4x4PredMode)((mbEnc[planeID].remIntraPredMode[idx] < (uint8_t)predIntra4x4PredMode) ?
+                mbEnc[planeID].remIntraPredMode[idx] : mbEnc[planeID].remIntraPredMode[idx] + 1);
+        //printf("%d submb remmode is %d\n", idx, mbEnc[planeID].remIntraPredMode[idx]);
+        //printf("%d submb mode is %d \n", idx, predModes4x4[planeID][yInSbs][xInSbs]);
+        // restore for next processes
+        predModes[planeID][yInSbs][xInSbs] = predModes4x4[planeID][yInSbs][xInSbs];
+    }
+
+}
+
+void IntraBase::setPredModes8x8(ColourComponent planeID)
+{
+    for(uint8_t idx = 0; idx < 4; ++idx) {
+        uint8_t xInSbs = (uint8_t)MacroblockInvScan2x2[idx].x;
+        uint8_t yInSbs = (uint8_t)MacroblockInvScan2x2[idx].y;
+        int predIntra8x8PredMode = getPredIntra8x8PredMode(planeID, xInSbs, yInSbs);
+        //printf("predmode : %d \n", predIntra8x8PredMode);
+
+        if(mbEnc[planeID].prevIntraPredModeFlag[idx])
+            predModes8x8[planeID][yInSbs][xInSbs] = (Intra8x8PredMode)predIntra8x8PredMode;
+        else
+            predModes8x8[planeID][yInSbs][xInSbs] = (Intra8x8PredMode)((mbEnc[planeID].remIntraPredMode[idx] < (uint8_t)predIntra8x8PredMode) ?
+                mbEnc[planeID].remIntraPredMode[idx] : mbEnc[planeID].remIntraPredMode[idx] + 1);
+        //printf("%d submb remmode is %d\n", idx, mbEnc[planeID].remIntraPredMode[idx]);
+        //printf("%d submb mode is %d \n", idx, predModes8x8[planeID][yInSbs][xInSbs]);
+        // restore for next processes
+        predModes[planeID][yInSbs * 2 + 0][xInSbs * 2 + 0] =
+            predModes[planeID][yInSbs * 2 + 0][xInSbs * 2 + 1] =
+            predModes[planeID][yInSbs * 2 + 1][xInSbs * 2 + 0] =
+            predModes[planeID][yInSbs * 2 + 1][xInSbs * 2 + 1] = predModes8x8[planeID][yInSbs][xInSbs];
+    }
+}
+
+void IntraBase::setPredModes16x16(ColourComponent planeID)
+{
+    for (uint8_t yInSbs = 0; yInSbs < 4; ++yInSbs)
+        for (uint8_t xInSbs = 0; xInSbs < 4; ++xInSbs)
+            predModes[planeID][yInSbs][xInSbs] = INTRA_4x4_DC;
+
+    predMode16x16[planeID] = (Intra16x16PredMode)mbEnc[planeID].intra16x16PredMode;
 }

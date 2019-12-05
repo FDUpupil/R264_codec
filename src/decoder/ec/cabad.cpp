@@ -1,6 +1,6 @@
 #include"cabad.h"
 
-CABAD::CABAD(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg) : EntropyDecoder(seqCfg, picCfg)
+CABAD::CABAD(const PictureLevelConfig &cfgPic) : EntropyDecoder(cfgPic)
 {
     if(chromaFormat == CHROMA_FORMAT_444 && separateColourPlaneFlag) {
         ctxModel = new ContextModelSet[COLOUR_COMPONENT_COUNT];
@@ -18,17 +18,17 @@ CABAD::~CABAD()
     delete[] engine;
 }
 
-void CABAD::init(const SliceLevelConfig &sliCfg, Bitstream *bs)
+void CABAD::init(const SliceLevelConfig &cfgSlic, Bitstream *bs)
 {
-    EntropyDecoder::init(sliCfg);
+    EntropyDecoder::init(cfgSlic);
 
 	// Bitstream
     for(int compID = 0; compID < compCount; ++compID) {
         engine[compID].setBitstream(bs + compID);
         if (sliceType == I_SLICE)
-            ctxModel[compID].init(sliceQP);
+            ctxModel[compID].init(sliceQP[COLOUR_COMPONENT_Y]);
         else
-            ctxModel[compID].init(sliceQP, sliCfg.cabacInitIdc);
+            ctxModel[compID].init(sliceQP[compID], cfgSlic.cabacInitIdc[compID]);
     }
 
     for(int compID = 0; compID < compCount; ++compID)
@@ -107,7 +107,7 @@ void CABAD::readMbTypeInfos(ColourComponent compID) /// read 1~7 bits
         binVal = biariDecodeRegular(compID, ctxIdx);
 
         ctxIdx++;
-        mb[compID].intra16x16PredMode = binVal << 1 + biariDecodeRegular(compID, ctxIdx);
+        mb[compID].intra16x16PredMode = (binVal << 1) + biariDecodeRegular(compID, ctxIdx);
     }
 
 }
@@ -135,7 +135,8 @@ void CABAD::readIntraNxNPredModeInfos(ColourComponent compID) /// read modeCount
 
         if (!mb[compID].prevIntraPredModeFlag[idx]){
             ctxIdx = ContextModelSet::getCtxIdxForRemIntraNxNPredMode();
-            mb[compID].remIntraPredMode[idx] = biariDecodeFixedlLength(compID, 3, ctxIdx);
+            mb[compID].remIntraPredMode[idx] = (uint8_t)biariDecodeFixedlLength(compID, 3, ctxIdx);
+            //printf("%d submb's remmod : %d\n", idx, mb[compID].remIntraPredMode[idx]);
         }    
     }
 }
@@ -234,14 +235,15 @@ void CABAD::readMbQPDeltaInfos(ColourComponent compID)
         mbQPDelta = 0;
     }
     else {
+        ctxIdx = ContextModelSet::getCtxIdxForMbQPDelta(refFlags[compID].mbQPDelta, 1);
         mbQPDelta = biariDecodeUnary(compID, ctxIdx, ctxIdx+1) + 1;
     }
 	if (xInMbs == 0 && yInMbs == 0)
-		mb[compID].qp = sliceQP + mbQPDelta;
+		mb[compID].qp = sliceQP[compID] + mbQPDelta;
 	else
-		mb[compID].qp = lastMbQP + mbQPDelta;
+		mb[compID].qp = lastMbQP[compID] + mbQPDelta;
 
-	lastMbQP = mb[compID].qp;
+	lastMbQP[compID] = mb[compID].qp;
 }
 
 void CABAD::readLumaCoefsInfos(ColourComponent compID, ColourComponent planeID)
@@ -276,7 +278,7 @@ void CABAD::readLumaCoefsInfos(ColourComponent compID, ColourComponent planeID)
             if (cbpLuma[compID] & 1 << i8x8)
                 for (uint8_t i4x4 = 0; i4x4 < 4; ++i4x4) {
                     uint8_t idx = i8x8 << 2 | i4x4;
-					printf("!read the %d sub mb luma!", i8x8*4+i4x4);
+					//printf("!read the %d sub mb luma!", i8x8*4+i4x4);
                     ctxIdx = ContextModelSet::getCtxIdxForCodedBlockFlag(
                         ctxCompID, CODED_BLOCK_LUMA_4x4,
                         getFlagForCodedBlockFlagLuma4x4(planeID, idx));
@@ -288,7 +290,7 @@ void CABAD::readLumaCoefsInfos(ColourComponent compID, ColourComponent planeID)
     }
     else {
         for (uint8_t i8x8 = 0; i8x8 < 4; ++i8x8) {
-            printf("!read the %d sub mb luma!", i8x8);
+            //printf("!read the %d sub mb luma!", i8x8);
             if (cbpLuma[compID] & 1 << i8x8) {
                 flag = 1;
                 if(chromaFormat == CHROMA_FORMAT_444 && !separateColourPlaneFlag) {
@@ -316,7 +318,7 @@ void CABAD::readChromaCoefsInfos()
 
     if(cbpChroma != 0) {
     // Decode DC coefficient
-		printf("!read the chroma DC!");
+		//printf("!read the chroma DC!");
         for (int planeID = COLOUR_COMPONENT_CB; planeID <= COLOUR_COMPONENT_CR; ++planeID) {
             ctxIdx = ContextModelSet::getCtxIdxForCodedBlockFlag(
                     (ColourComponent)planeID, CODED_BLOCK_CHROMA_DC,
@@ -331,7 +333,7 @@ void CABAD::readChromaCoefsInfos()
     if(cbpChroma == 0x3) {
         for (int planeID = COLOUR_COMPONENT_CB; planeID <= COLOUR_COMPONENT_CR; ++planeID)
             for (uint8_t idx = 0; idx < count4x4; ++idx) {
-				printf("!read the %d chroma AC!", idx);
+				//printf("!read the %d chroma AC!", idx);
                 ctxIdx = ContextModelSet::getCtxIdxForCodedBlockFlag(
                     (ColourComponent)planeID, CODED_BLOCK_CHROMA_AC,
                     getFlagForCodedBlockFlagChromaAC((ColourComponent)planeID, idx));
@@ -395,6 +397,10 @@ void CABAD::readBlkCoefs(ColourComponent compID, ColourComponent ctxCompID, Code
             }      
         }
     }
+    // fill array
+    // for(uint8_t idx = noZeroLevelCount; idx < maxLevelCount; ++idx) {
+    //     coefs[idx] = 0;
+    // }
 
     coefs[noZeroLevelCount - 1] = 1;
     ctxIdxInc = 1;

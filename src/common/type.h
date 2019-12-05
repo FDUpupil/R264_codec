@@ -8,9 +8,6 @@
 #define MAX_SAMPLE_SQ_8 65025
 #define MAX_SAMPLE_SQ_10 1046529
 
-const uint32_t NON_ZERO_FLAG_AC_MASK = 0xFFFF;
-const uint8_t NON_ZERO_FLAG_DC_SHIFT = 16;
-
 using std::uint8_t;
 using std::uint16_t;
 using std::uint32_t;

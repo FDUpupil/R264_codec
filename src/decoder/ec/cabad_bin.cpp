@@ -19,10 +19,10 @@ uint8_t CABAD::biariDecodeRegular(ColourComponent compID, uint16_t ctxIdx)
     rangeLPS = ctxModel[compID].getRangeLPS(ctxIdx, range);
 
     binsVal = engine[compID].decodeRegular(valMPS, rangeLPS);
-	printf("bit: %d | MPS: %d | LPS: %d | ctx: %d | range: %x \n", binsVal, valMPS, rangeLPS, ctxIdx, range);
+	//printf("bit: %d | MPS: %d | LPS: %d | ctx: %d | range: %x \n", binsVal, valMPS, rangeLPS, ctxIdx, range);
     ctxModel[compID].update(ctxIdx, binsVal);
 
-	fprintf(forg_bs, "(%d)", binsVal);
+	//fprintf(forg_bs, "(%d)", binsVal);
 	fclose(forg_bs);
 
     return binsVal;
@@ -37,7 +37,7 @@ uint32_t CABAD::biariDecodeBypass(ColourComponent compID, uint8_t length)
 
 	binsVal = engine[compID].decodeBypass(length);
 
-	fprintf(forg_bs, "[%d]", binsVal);
+	//fprintf(forg_bs, "[%d]", binsVal);
 	fclose(forg_bs);
 
 	return binsVal;
@@ -52,7 +52,7 @@ uint8_t CABAD::biariDecodeTerminate(ColourComponent compID)
 
     binsVal = engine[compID].decodeTerminate();
 
-	fprintf(forg_bs, "{%d}", binsVal);
+	//fprintf(forg_bs, "{%d}", binsVal);
 	fclose(forg_bs);
 
     return binsVal;
@@ -62,9 +62,11 @@ uint8_t CABAD::biariDecodeTerminate(ColourComponent compID)
 uint32_t CABAD::biariDecodeFixedlLength(ColourComponent compID, uint8_t length, uint16_t ctxIdx)
 {
     uint32_t binsVal = 0;
-    while(length--) {
-        binsVal << 1;
-        binsVal |= (uint32_t)biariDecodeRegular(compID, ctxIdx);
+	uint8_t  bincount = 0;
+    while(!!length) {
+		length--;
+        binsVal |= (uint32_t)(biariDecodeRegular(compID, ctxIdx) << bincount++);
+		//printf("binsVal :%d", binsVal);
     }
     return binsVal;
 }
@@ -93,7 +95,7 @@ uint8_t CABAD::biariDecodeTruncatedUnary(ColourComponent compID, uint8_t bitMax,
 uint8_t CABAD::biariDecodeUnary(ColourComponent compID, uint16_t ctxIdx, uint16_t ctxIdxMax)
 {
     uint8_t binsVal = 0;
-    while(biariDecodeRegular(compID, ctxIdxMax)) {
+    while(biariDecodeRegular(compID, ctxIdx)) {
         binsVal++;
         if(ctxIdx < ctxIdxMax)
             ctxIdx++;

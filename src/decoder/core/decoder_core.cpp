@@ -1,18 +1,18 @@
 #include "decoder_core.h"
-#include "decoder/intra/intra_normal.h"
+#include "decoder/intra/intra_rec.h"
 
 #include "decoder/top/parser.h"
 
 #define ORG_BS R"(org_bs.txt)"
 
-DecoderCore::DecoderCore(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg)
+DecoderCore::DecoderCore(const PictureLevelConfig &cfgPic)
 {
-    sysCtrl = new SysCtrl(seqCfg, picCfg);
-    memCtrl = new MemCtrl(seqCfg, picCfg);
-    //intra   = new IntraNormal(seqCfg, picCfg);
+    sysCtrl = new SysCtrl(cfgPic);
+    memCtrl = new MemCtrl(cfgPic);
+    rec     = new IntraRec(cfgPic);
 
-    if(picCfg.entropy_coding_mode_flag)
-       ed = new CABAD(seqCfg, picCfg);
+    //if(picCfg.entropy_coding_mode_flag)
+    ed      = new CABAD(cfgPic);
 
     //db reserve
 }
@@ -22,19 +22,23 @@ DecoderCore::~DecoderCore()
     delete sysCtrl;
     delete memCtrl;
 
-    delete intra;
+    delete rec;
     delete ed;
 
 }
 
-void DecoderCore::decode(const SliceLevelConfig &sliCfg, std::unique_ptr<BlockyImage> &recFrame, Bitstream *sodb)
+void DecoderCore::decode(const SliceLevelConfig &cfgSlic, std::unique_ptr<BlockyImage> &recFrame, Bitstream *sodb)
 {
-    sysCtrl->init(sliCfg);
-    memCtrl->init(sliCfg);
-    //intra->init(sliCfg);
-    ed->init(sliCfg, sodb);
+    sysCtrl->init(cfgSlic);
+    memCtrl->init(cfgSlic);
+    rec->init(cfgSlic);
+    ed->init(cfgSlic, sodb);
+
+    memCtrl->requireRecFrame(std::move(recFrame));
 
     runCycles();
+
+    recFrame = memCtrl->releaseRecFrame();
 }
 
 void DecoderCore::runCycles()
@@ -42,22 +46,30 @@ void DecoderCore::runCycles()
 	int mb_num = 0;
 
     while(sysCtrl->hasNextMb()) {
-        sysCtrl->getNextMbInfo(mbInfo); // set mb Spatial information & update next mb
-		sysCtrl->prepareNextMb(mb);	// reset mb encoding information 
+        sysCtrl->getCurMbInfo(mbInfo); // set mb Spatial information & update next mb
+		sysCtrl->resetMbBuffer(mb);	// reset mb encoding information
+
+        memCtrl->getRecMemory(recIn, recOut); // set ref-pixel and ref-predMode
 		memCtrl->getECMemory(ecIn, ecOut); // set ref&cur flag ptr
 						
 	    ed->cycle(mbInfo, mb, ecIn, ecOut);
-
         memCtrl->updateECMemory(); //update the ref flag 
+
+        //mbInfoDisplay(mb);
+
+        rec->cycle(mbInfo, recIn, mb, recOut);
+        memCtrl->updateIntraMemory();
+        
+        sysCtrl->setNextMb();
 		memCtrl->setNextMb(); // update the spatial information in memctrl
 
-		mbInfoDisplay(mb);
+		
 
-		FILE* forg_bs;
-		forg_bs = fopen(ORG_BS, "a");
-		fprintf(forg_bs, "\n ========== %d mb finished! \n", mb_num);
-		printf("\n ========== %d mb finished! \n", mb_num);
-		mb_num++;
-		fclose(forg_bs);
+		//FILE* forg_bs;
+		//forg_bs = fopen(ORG_BS, "a");
+		//fprintf(forg_bs, "\n ========== %d mb finished! \n", mb_num);
+		//printf("\n ========== %d mb finished! \n", mb_num);
+		//mb_num++;
+		//fclose(forg_bs);
     }
 }

@@ -1,7 +1,7 @@
-#ifndef __ENCODER_QUANT_H__
-#define __ENCODER_QUANT_H__
+#ifndef __DECODER_QUANT_H__
+#define __DECODER_QUANT_H__
 
-#include "common/quant.h"
+#include "common/quant_common.h"
 
 #include <cassert>
 

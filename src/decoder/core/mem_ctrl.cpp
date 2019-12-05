@@ -2,12 +2,12 @@
 
 #include <memory>
 
-MemCtrl::MemCtrl(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg)
-    : chromaFormat(seqCfg.chroma_format_idc),
-      widthInMbs(seqCfg.pic_width_in_mbs_minus1 + 1),
-      heightInMbs(seqCfg.pic_height_in_map_units_minus1 + 1),
-      separateColourPlaneFlag(seqCfg.separate_colour_plane_flag),
-      entropyCodingModeFlag(picCfg.entropy_coding_mode_flag)
+MemCtrl::MemCtrl(const PictureLevelConfig &cfgPic)
+    : chromaFormat(cfgPic.chromaFormat),
+      widthInMbs(cfgPic.widthInMbs),
+      heightInMbs(cfgPic.heightInMbs),
+      separateColourPlaneFlag(cfgPic.separateColourPlaneFlag),
+      entropyCodingModeFlag(cfgPic.entropyCodingModeFlag)
 {
     compCount = (uint8_t)(separateColourPlaneFlag ? COLOUR_COMPONENT_COUNT : 1);
     planeCount = (uint8_t)((chromaFormat != CHROMA_FORMAT_400) ? COLOUR_COMPONENT_COUNT : 1);
@@ -17,6 +17,9 @@ MemCtrl::MemCtrl(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &pi
     lastUpLeftPixels[COLOUR_COMPONENT_Y]  = new PixType[1];
     lastHorLineIntraPredModes[COLOUR_COMPONENT_Y] = new uint8_t[widthInMbs * 4];
     lastVerLineIntraPredModes[COLOUR_COMPONENT_Y] = new uint8_t[4];
+
+    //mbWC = (chromaFormat != CHROMA_FORMAT_444) ? 8 : 16;
+    //mbHC = (chromaFormat == CHROMA_FORMAT_420) ? 8 : 16;
 
     if (chromaFormat != CHROMA_FORMAT_400) {
         uint8_t mbWC = (chromaFormat != CHROMA_FORMAT_444) ? 8 : 16;
@@ -117,8 +120,8 @@ MemCtrl::~MemCtrl()
             delete[] leftNonZero[planeID];
             delete[] upNonZero[planeID];
 
-            delete[] leftNonIntraNxN[planeID];
-            delete[] upNonIntraNxN[planeID];
+            //delete[] leftNonIntraNxN[planeID];
+            //delete[] upNonIntraNxN[planeID];
         }
     }
 
@@ -129,9 +132,9 @@ MemCtrl::~MemCtrl()
     }
 }
 
-void MemCtrl::init(const SliceLevelConfig &sliCfg)
+void MemCtrl::init(const SliceLevelConfig &cfgSilc)
 {
-    Unused(sliCfg);
+    Unused(cfgSilc);
 
     xInMbs = 0;
     yInMbs = 0;
@@ -434,3 +437,16 @@ void MemCtrl::updateCABACMemory()
         upNonZeroDC[planeID][xInMbs] = (uint8_t)(curFlags[planeID].nonZero >> NON_ZERO_FLAG_DC_SHIFT);
     }
 }
+
+void MemCtrl::getRecMemory(MemCtrlToRec &memIn, RecToMemCtrl &memOut) 
+{
+    getIntraPixels();
+    getIntraPredModes();
+
+    memIn.refPixels = curRefPixels; 
+    memIn.refModes = curRefIntraModes;
+
+    memOut.recMb = curRecMb;
+    memOut.predModes = curIntraPredModes;
+}
+

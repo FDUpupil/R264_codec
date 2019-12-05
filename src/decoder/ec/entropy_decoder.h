@@ -2,17 +2,17 @@
 #define _ENTROPY_DECODER_H_
 
 #include<memory>
-#include "common/cfgtype.h"
+#include "common/codec_type.h"
 #include "common/type.h"
 #include "tools/bitstream/bitstream.h"
 
 class EntropyDecoder {
 public:
-    EntropyDecoder(const SequenceLevelConfig &seqCfg, const PictureLevelConfig &picCfg);
+    EntropyDecoder(const PictureLevelConfig &cfgPic);
     virtual ~EntropyDecoder();
 
     virtual void init(const SliceLevelConfig &sliCfg);
-    virtual void init(const SliceLevelConfig &sliCfg, Bitstream *rbsp) = 0;
+    virtual void init(const SliceLevelConfig &cfgSlic, Bitstream *rbsp) = 0;
     virtual void cycle(MacroblockInfo &mbInfo, EncodedMb *mbDec, MemCtrlToEC &memIn, ECToMemCtrl &memOut);
 
 protected:
@@ -33,7 +33,7 @@ protected:
 
     // Slice level
     SliceType sliceType;
-    int8_t sliceQP;
+    int8_t sliceQP[COLOUR_COMPONENT_COUNT];
     //ColourComponent currentPlaneID;
 
     // Macroblock level
@@ -41,7 +41,7 @@ protected:
     uint16_t yInMbs;
 
     //int8_t mbQP;
-    int8_t lastMbQP;
+    int8_t lastMbQP[COLOUR_COMPONENT_COUNT];
     int8_t mbQPDelta;
 
     uint8_t compCount; ///< NALU package number

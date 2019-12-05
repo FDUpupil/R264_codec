@@ -4,7 +4,8 @@
 #include "decoder/top/decoder_top.h"
 using namespace std;
 
-#define BS_FILE R"(E:\WORK\R264_D\build\vs2019\R264_D\test.264)"
+#define BS_FILE R"(E:\WORK\R264_codec\build\R264_codec\test.264)"
+#define REC_FILE R"(E:\WORK\R264_codec\build\R264_codec\rec.yuv)"
 
 
 int main()
@@ -13,13 +14,17 @@ int main()
 	int frame_num = 0;
 
     FILE *fbs;
+    FILE *frec;
+
     fbs = fopen(BS_FILE,"rb");
+    frec = fopen(REC_FILE, "wb"); 
 
 	DecoderTop decoderTop;
 
-	decoderTop.decode(fbs);  
+	decoderTop.decode(fbs, frec);  
     
     fclose(fbs);
+	fclose(frec);
 
     return 0;
 }
