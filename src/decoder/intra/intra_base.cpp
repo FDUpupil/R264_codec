@@ -83,8 +83,7 @@ void IntraBase::cycle(const MacroblockInfo &mbInfo, const MemCtrlToRec &memIn, E
     preprocess_rec();
     setPredModes();
     reconstructure();
-
-
+    
 }
 
 void IntraBase::start(const MacroblockInfo &mbInfo, const MemCtrlToIntra &memIn, EncodedMb *mbEncoded, const IntraToMemCtrl &memOut)
@@ -725,6 +724,7 @@ void IntraBase::setPredModes4x4(ColourComponent planeID)
         //printf("%d submb remmode is %d\n", idx, mbEnc[planeID].remIntraPredMode[idx]);
         //printf("%d submb mode is %d \n", idx, predModes4x4[planeID][yInSbs][xInSbs]);
         // restore for next processes
+
         predModes[planeID][yInSbs][xInSbs] = predModes4x4[planeID][yInSbs][xInSbs];
     }
 

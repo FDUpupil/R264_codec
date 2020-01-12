@@ -130,6 +130,7 @@
     <ClCompile Include="..\..\..\src\decoder\core\decoder_core.cpp" />
     <ClCompile Include="..\..\..\src\decoder\core\mem_ctrl.cpp" />
     <ClCompile Include="..\..\..\src\decoder\core\sys_ctrl.cpp" />
+    <ClCompile Include="..\..\..\src\decoder\db\deblock.cpp" />
     <ClCompile Include="..\..\..\src\decoder\ec\arith_dec_engine.cpp" />
     <ClCompile Include="..\..\..\src\decoder\ec\cabad.cpp" />
     <ClCompile Include="..\..\..\src\decoder\ec\cabad_bin.cpp" />

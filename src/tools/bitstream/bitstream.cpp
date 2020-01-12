@@ -21,15 +21,26 @@ void Bitstream::init()
 		bufiter = buf.begin();
 }
 
+void Bitstream::align_weak()
+{
+	if (!bufempty() && (lengthLeft < 8)) {
+		lengthLeft = 8;
+		if(bufiter != (buf.end() - 1)){
+			bufiter++;
+		}
+	}
+	//printf("byte : %x \n", *bufiter);
+}
+
 void Bitstream::align()
 {
 	if (!bufempty()) {
 		lengthLeft = 8;
-		if(bufiter != (buf.end() - 1)){
+		if (bufiter != (buf.end() - 1)) {
 			bufiter++;
-			//printf("byte : %x \n", *bufiter);
 		}
 	}
+	//printf("byte : %x \n", *bufiter);
 }
 
 NALUType Bitstream::getNalutype()

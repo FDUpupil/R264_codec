@@ -1,5 +1,5 @@
 #include "sys_ctrl.h"
-
+#include <iostream>
 SysCtrl::SysCtrl(const PictureLevelConfig &cfgPic)
     : widthInMbs(cfgPic.widthInMbs),
       heightInMbs(cfgPic.heightInMbs)
@@ -77,6 +77,7 @@ void SysCtrl::setNextMb()
 
 bool SysCtrl::hasNextMb() const
 {
+    //printf("%d mb \n",  yInMbs * widthInMbs + xInMbs);
     return yInMbs < heightInMbs;
 }
 

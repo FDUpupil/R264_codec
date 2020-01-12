@@ -15,6 +15,7 @@ DecoderCore::DecoderCore(const PictureLevelConfig &cfgPic)
     ed      = new CABAD(cfgPic);
 
     //db reserve
+    db      = new DeblockingFilter(cfgPic);
 }
 
 DecoderCore::~DecoderCore()
@@ -24,6 +25,7 @@ DecoderCore::~DecoderCore()
 
     delete rec;
     delete ed;
+    delete db;
 
 }
 
@@ -33,7 +35,7 @@ void DecoderCore::decode(const SliceLevelConfig &cfgSlic, std::unique_ptr<Blocky
     memCtrl->init(cfgSlic);
     rec->init(cfgSlic);
     ed->init(cfgSlic, sodb);
-
+    db->init(cfgSlic);
     memCtrl->requireRecFrame(std::move(recFrame));
 
     runCycles();
@@ -51,7 +53,8 @@ void DecoderCore::runCycles()
 
         memCtrl->getRecMemory(recIn, recOut); // set ref-pixel and ref-predMode
 		memCtrl->getECMemory(ecIn, ecOut); // set ref&cur flag ptr
-						
+		memCtrl->getDbMemory(dbIn,dbOut); // 
+
 	    ed->cycle(mbInfo, mb, ecIn, ecOut);
         memCtrl->updateECMemory(); //update the ref flag 
 
@@ -59,7 +62,11 @@ void DecoderCore::runCycles()
 
         rec->cycle(mbInfo, recIn, mb, recOut);
         memCtrl->updateIntraMemory();
-        
+
+        //db process
+        db->cycle(mbInfo, mb, dbIn, dbOut);
+        memCtrl->updateDbMemory();
+
         sysCtrl->setNextMb();
 		memCtrl->setNextMb(); // update the spatial information in memctrl
 

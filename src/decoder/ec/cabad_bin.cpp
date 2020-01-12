@@ -6,8 +6,8 @@
 
 uint8_t CABAD::biariDecodeRegular(ColourComponent compID, uint16_t ctxIdx)
 {
-	FILE* forg_bs;
-	forg_bs = fopen(ORG_BS, "a");
+	//FILE* forg_bs;
+	//forg_bs = fopen(ORG_BS, "a");
 
     uint8_t     valMPS;
     uint16_t    range;
@@ -23,37 +23,37 @@ uint8_t CABAD::biariDecodeRegular(ColourComponent compID, uint16_t ctxIdx)
     ctxModel[compID].update(ctxIdx, binsVal);
 
 	//fprintf(forg_bs, "(%d)", binsVal);
-	fclose(forg_bs);
+	//fclose(forg_bs);
 
     return binsVal;
 }
 
 uint32_t CABAD::biariDecodeBypass(ColourComponent compID, uint8_t length)
 {
-	FILE* forg_bs;
-	forg_bs = fopen(ORG_BS, "a");
+	//FILE* forg_bs;
+	//forg_bs = fopen(ORG_BS, "a");
 
 	uint32_t     binsVal;
 
 	binsVal = engine[compID].decodeBypass(length);
 
 	//fprintf(forg_bs, "[%d]", binsVal);
-	fclose(forg_bs);
+	//fclose(forg_bs);
 
 	return binsVal;
 }
 
 uint8_t CABAD::biariDecodeTerminate(ColourComponent compID)
 {
-	FILE* forg_bs;
-	forg_bs = fopen(ORG_BS, "a");
+	//FILE* forg_bs;
+	//forg_bs = fopen(ORG_BS, "a");
 
     uint8_t     binsVal;
 
     binsVal = engine[compID].decodeTerminate();
 
 	//fprintf(forg_bs, "{%d}", binsVal);
-	fclose(forg_bs);
+	//fclose(forg_bs);
 
     return binsVal;
 

@@ -28,6 +28,7 @@ public:
     void clear();
 	void init();
 	void align();
+	void align_weak();
 	bool bufempty() {return buf.empty();}
 	const std::vector<uint8_t>& getBitstream() const { return buf; }
 	std::vector<uint8_t>& getBitstream() { return buf; }

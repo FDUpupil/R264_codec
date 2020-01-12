@@ -114,7 +114,7 @@ void getSliceHeader(SequenceParameterSet &sps, PictureParameterSet &pps, SliceHe
 
         sliceheader.pic_parameter_set_id = nalu.readNextUEG0();
 
-        if(sps.chroma_format_idc == CHROMA_FORMAT_444)
+        if(sps.chroma_format_idc == CHROMA_FORMAT_444 & sps.separate_colour_plane_flag)
         sliceheader.colour_plane_id = (ColourComponent)nalu.readFixedLength((uint8_t)2);
 
         sliceheader.frame_num = nalu.readFixedLength(4);
@@ -141,7 +141,7 @@ void getSliceHeader(SequenceParameterSet &sps, PictureParameterSet &pps, SliceHe
 		    }
 	    }
     }  
-	nalu.align();
+	nalu.align_weak();
 }
 
 void displaySPS(SequenceParameterSet &sps)

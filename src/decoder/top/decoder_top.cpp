@@ -48,19 +48,19 @@ void DecoderTop::decode(FILE *bs, FILE *frec)
 							getSliceHeader(sps, pps, sliceInfo[compID], nalu[compID]);
 						} else 
 							return;
-		}
+				}
 
-			setParConfig();
-			decoderInit();
+				setParConfig();
+				decoderInit();
 
-			core->decode(cfgSlic, recFrame, nalu);
+				core->decode(cfgSlic, recFrame, nalu);
 			
-			rec->require(move(buf));
-			conv->convertMacroblocksToImage(*recFrame, *rec);
-			buf = rec->release();
-			fwrite(&buf[0], 1, rec->getFrameSize(), frec);
+				rec->require(move(buf));
+				conv->convertMacroblocksToImage(*recFrame, *rec);
+				buf = rec->release();
+				fwrite(&buf[0], 1, rec->getFrameSize(), frec);
 
-			break;
+				break;
 		}
 		for (int i = 0; i < 3; i++)
 			nalu[i].clear();

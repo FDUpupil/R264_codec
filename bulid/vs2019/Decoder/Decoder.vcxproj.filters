@@ -21,5 +21,6 @@
     <ClCompile Include="..\..\..\src\decoder\top\parser.cpp" />
     <ClCompile Include="..\..\..\src\decoder\tq\quant.cpp" />
     <ClCompile Include="..\..\..\src\decoder\tq\tq.cpp" />
+    <ClCompile Include="..\..\..\src\decoder\db\deblock.cpp" />
   </ItemGroup>
 </Project>

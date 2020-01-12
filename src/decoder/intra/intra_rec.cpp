@@ -1,5 +1,5 @@
 #include "intra_rec.h"
-
+#include <iostream>
 
 IntraRec::IntraRec(const PictureLevelConfig &cfg) 
     :  IntraBase(cfg)
@@ -8,9 +8,9 @@ IntraRec::IntraRec(const PictureLevelConfig &cfg)
 
 void IntraRec::reconstructure()
 {
-    if(chromaFormat == CHROMA_FORMAT_444) {
+    if(chromaFormat == CHROMA_FORMAT_444 && !separateColourPlaneFlag) {
         for(int planeID = 0; planeID < COLOUR_COMPONENT_COUNT; ++planeID) {
-            switch(mbEnc[planeID].mbPart) {
+            switch(mbEnc[COLOUR_COMPONENT_Y].mbPart) {
                 case INTRA_PARTITION_4x4:
                     reconstructure4x4((ColourComponent)planeID);
                     break;
@@ -56,7 +56,12 @@ void IntraRec::reconstructure4x4(ColourComponent planeID)
         setRefPixels4x4(planeID, recMb4x4[planeID], xInSbs, yInSbs);
         
         //printf("%d submb predict! \n", idx);
-        pred4x4[planeID]->predict(predModes4x4[planeID][yInSbs][xInSbs], predBlk);
+        if(chromaFormat == CHROMA_FORMAT_444 && !separateColourPlaneFlag) {
+            pred4x4[planeID]->predict(predModes4x4[COLOUR_COMPONENT_Y][yInSbs][xInSbs], predBlk);
+        }
+        else {
+            pred4x4[planeID]->predict(predModes4x4[planeID][yInSbs][xInSbs], predBlk);
+        }
 
         tq.inverse4x4(planeID, mbEnc[planeID].coefs.blk4x4[idx], recResBlk);
 
@@ -76,13 +81,19 @@ void IntraRec::reconstructure8x8(ColourComponent planeID)
     uint8_t bitDepth = (planeID == COLOUR_COMPONENT_Y) ? bitDepthY : bitDepthC;
 
     for(uint8_t idx = 0; idx < 4; ++idx) {
+        //printf("%d 8x8\n", idx);
         uint8_t xInSbs = (uint8_t)MacroblockInvScan2x2[idx].x;
         uint8_t yInSbs = (uint8_t)MacroblockInvScan2x2[idx].y;
 
         setRefPixels8x8(planeID, recMb8x8[planeID], xInSbs, yInSbs);
 
         //printf("%d submb predict! \n", idx);
-        pred8x8[planeID]->predict(predModes8x8[planeID][yInSbs][xInSbs], predBlk);
+        if(chromaFormat == CHROMA_FORMAT_444 && !separateColourPlaneFlag) {
+            pred8x8[planeID]->predict(predModes8x8[COLOUR_COMPONENT_Y][yInSbs][xInSbs], predBlk);
+        }
+        else {
+            pred8x8[planeID]->predict(predModes8x8[planeID][yInSbs][xInSbs], predBlk);
+        }
        
         tq.inverse8x8(planeID, mbEnc[planeID].coefs.blk8x8[idx], recResBlk);
 
@@ -103,7 +114,12 @@ void IntraRec::reconstructure16x16(ColourComponent planeID)
 
     setRefPixels16x16(planeID);
 
-    pred16x16[planeID]->predict(predMode16x16[planeID], predBlk);
+    if(chromaFormat == CHROMA_FORMAT_444 && !separateColourPlaneFlag) {
+            pred16x16[planeID]->predict(predMode16x16[COLOUR_COMPONENT_Y], predBlk);
+        }
+        else {
+            pred16x16[planeID]->predict(predMode16x16[planeID], predBlk);
+        }
 
     tq.inverse16x16(planeID, mbEnc[planeID].coefs.blk16x16, recResBlk);
 
