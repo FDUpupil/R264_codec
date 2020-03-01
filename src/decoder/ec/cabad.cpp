@@ -26,7 +26,7 @@ void CABAD::init(const SliceLevelConfig &cfgSlic, Bitstream *bs)
     for(int compID = 0; compID < compCount; ++compID) {
         engine[compID].setBitstream(bs + compID);
         if (sliceType == I_SLICE)
-            ctxModel[compID].init(sliceQP[COLOUR_COMPONENT_Y]);
+            ctxModel[compID].init(sliceQP[compID]);
         else
             ctxModel[compID].init(sliceQP[compID], cfgSlic.cabacInitIdc[compID]);
     }

@@ -1,4 +1,24 @@
-﻿  sys_ctrl.cpp
+﻿  decoder_core.cpp
+  mem_ctrl.cpp
+  sys_ctrl.cpp
+  deblock.cpp
+  arith_dec_engine.cpp
+F:\WORK_vip\R264_build\R264_codec\src\decoder\ec\arith_dec_engine.cpp(24,14): warning C4018: “<”: 有符号/无符号不匹配
+F:\WORK_vip\R264_build\R264_codec\src\decoder\ec\arith_dec_engine.cpp(61,13): warning C4018: “<”: 有符号/无符号不匹配
+F:\WORK_vip\R264_build\R264_codec\src\decoder\ec\arith_dec_engine.cpp(112,14): warning C4018: “<”: 有符号/无符号不匹配
+  cabad.cpp
+F:\WORK_vip\R264_build\R264_codec\src\decoder\ec\arith_dec_engine.cpp(121,42): warning C4244: “参数”: 从“uint16_t”转换到“uint8_t”，可能丢失数据
+  cabad_bin.cpp
+F:\WORK_vip\R264_build\R264_codec\src\decoder\ec\cabad.cpp(356,17): warning C4101: “ctxIdx”: 未引用的局部变量
+  entropy_decoder.cpp
+  intra_base.cpp
   intra_rec.cpp
+  main.cpp
+  decoder_top.cpp
+  parser.cpp
+F:\WORK_vip\R264_build\R264_codec\src\decoder\ec\cabad_bin.cpp(17,52): warning C4244: “参数”: 从“uint16_t”转换到“uint8_t”，可能丢失数据
+  quant.cpp
+  tq.cpp
   正在生成代码...
-  Decoder.vcxproj -> E:\WORK\git\R264\R264_codec\bulid\vs2019\x64\Debug\Decoder.exe
+F:\WORK_vip\R264_build\R264_codec\src\decoder\top\parser.cpp(117,87): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
+  Decoder.vcxproj -> F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Debug\Decoder.exe

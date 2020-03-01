@@ -8,9 +8,8 @@ SysCtrl::SysCtrl(const PictureLevelConfig &cfgPic)
 
 void SysCtrl::init(const SliceLevelConfig &cfgSlic)
 {
-
-    xInMbs = 0;
-    yInMbs = 0;
+    yInMbs = cfgSlic.firstMbInSlice / widthInMbs;
+    xInMbs = cfgSlic.firstMbInSlice - widthInMbs * yInMbs;
 
     for(uint8_t planeID = COLOUR_COMPONENT_Y; planeID < COLOUR_COMPONENT_COUNT; ++planeID)
         curQP[planeID] = cfgSlic.sliceQP[planeID];

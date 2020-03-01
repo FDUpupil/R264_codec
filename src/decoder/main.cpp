@@ -4,8 +4,8 @@
 #include "decoder/top/decoder_top.h"
 using namespace std;
 
-#define BS_FILE R"(E:\WORK\R264_codec\build\R264_codec\test.264)"
-#define REC_FILE R"(E:\WORK\R264_codec\build\R264_codec\rec.yuv)"
+#define BS_FILE R"(F:\WORK_vip\R264_test\test.264)"
+#define REC_FILE R"(F:\WORK_vip\R264_test\rec.yuv)"
 
 
 int main()

@@ -28,12 +28,13 @@ private:
     uint16_t    widthInMbs;
     uint16_t    heightInMbs;
 
-    std::unique_ptr<BlockyImage>  recFrame;
-    std::unique_ptr<uint8_t[]>    buf;
-    RawImage    *rec;
-    MacroblockConverter     *conv;
+    std::unique_ptr<BlockyImage>            recFrame;
+    std::unique_ptr<uint8_t[]>              buf;
+    std::unique_ptr<RawImage>               rec;
+    std::unique_ptr<MacroblockConverter>    conv;
 
-    DecoderCore *core;
+    std::unique_ptr<DecoderCore>            core;
+    
     Annex_b     *bsfile;
     Bitstream   *nalu;
 
@@ -44,7 +45,8 @@ private:
     PictureLevelConfig      cfgPic;
     SliceLevelConfig        cfgSlic;
 
-    void setParConfig();
+    void setPicParConfig();
+    void setSlcParConfig();
     void decoderInit();
 };
 

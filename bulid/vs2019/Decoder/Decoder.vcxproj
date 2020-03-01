@@ -72,6 +72,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>../../../src;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>../../../src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -93,7 +96,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalOptions>"E:\WORK\git\R264\R264_codec\bulid\vs2019\x64\Debug\Common.lib" "E:\WORK\git\R264\R264_codec\bulid\vs2019\x64\Debug\Tool.lib" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>"F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Debug\Common.lib" "F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Debug\Tool.lib" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,11 +122,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalOptions>"F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Release\Common.lib" "F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Release\Tool.lib" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

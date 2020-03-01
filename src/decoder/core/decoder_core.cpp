@@ -2,8 +2,7 @@
 #include "decoder/intra/intra_rec.h"
 
 #include "decoder/top/parser.h"
-
-#define ORG_BS R"(org_bs.txt)"
+#include "decoder/defines.h"
 
 DecoderCore::DecoderCore(const PictureLevelConfig &cfgPic)
 {
@@ -58,7 +57,7 @@ void DecoderCore::runCycles()
 	    ed->cycle(mbInfo, mb, ecIn, ecOut);
         memCtrl->updateECMemory(); //update the ref flag 
 
-        //mbInfoDisplay(mb);
+        mbInfoDisplay(mb);
 
         rec->cycle(mbInfo, recIn, mb, recOut);
         memCtrl->updateIntraMemory();
@@ -71,12 +70,13 @@ void DecoderCore::runCycles()
 		memCtrl->setNextMb(); // update the spatial information in memctrl
 
 		
-
-		//FILE* forg_bs;
-		//forg_bs = fopen(ORG_BS, "a");
-		//fprintf(forg_bs, "\n ========== %d mb finished! \n", mb_num);
-		//printf("\n ========== %d mb finished! \n", mb_num);
-		//mb_num++;
-		//fclose(forg_bs);
+#ifdef DEBUG
+		FILE* forg_bs;
+		forg_bs = fopen(ORG_BS, "a");
+		fprintf(forg_bs, "\n ========== %d mb finished! \n", mb_num);
+		printf("\n ========== %d mb finished! \n", mb_num);
+	    mb_num++;
+		fclose(forg_bs);
+#endif
     }
 }

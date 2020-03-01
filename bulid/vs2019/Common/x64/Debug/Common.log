@@ -16,4 +16,4 @@ quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute4
 quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute4x4AC(enum ColourComponent,int const (&)[4][4],int (&)[4][4])const " (?compute4x4AC@InvQuantizer@@QEBAXW4ColourComponent@@AEAY133$$CBHAEAY133H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
 quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute4x4(enum ColourComponent,int const (&)[4][4],int (&)[4][4])const " (?compute4x4@InvQuantizer@@QEBAXW4ColourComponent@@AEAY133$$CBHAEAY133H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
 quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute8x8(enum ColourComponent,int const (&)[8][8],int (&)[8][8])const " (?compute8x8@InvQuantizer@@QEBAXW4ColourComponent@@AEAY177$$CBHAEAY177H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
-  Common.vcxproj -> E:\WORK\git\R264\R264_codec\bulid\vs2019\x64\Debug\Common.lib
+  Common.vcxproj -> F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Debug\Common.lib

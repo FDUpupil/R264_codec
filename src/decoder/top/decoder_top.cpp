@@ -10,7 +10,6 @@ DecoderTop::DecoderTop()
 
 DecoderTop::~DecoderTop()
 {
-	delete		core;
 	delete		bsfile;
 	delete[]	nalu;
 }
@@ -29,32 +28,31 @@ void DecoderTop::decode(FILE *bs, FILE *frec)
 		switch (nalu_type) {
 			case NALU_TYPE_SPS:
 				processSPS(sps, nalu[0]);
+				compCount = sps.separate_colour_plane_flag? 3 : 1;
 				displaySPS(sps);
 				break;
 
 			case NALU_TYPE_PPS:
 				processPPS(pps, nalu[0]);
 				displayPPS(pps);
+				setPicParConfig();
+				decoderInit();
 				break;
 
-			case NALU_TYPE_IDR:
+			case NALU_TYPE_IDR:				
 				getSliceHeader(sps, pps, sliceInfo[0], nalu[0]);
 				displaySliceHeader(sliceInfo[0]);
-
-				if(sps.chroma_format_idc == CHROMA_FORMAT_444 && sps.separate_colour_plane_flag) {
-					for(int compID = COLOUR_COMPONENT_CB; compID < COLOUR_COMPONENT_COUNT; ++compID)
-						if(!bsfile->isEndofile() && bsfile->getNalu(nalu[compID])) {
-							nalu[compID].getNalutype();
+				// if separate_colour_plane_flag is ture , read next two nalu
+				for(int compID = COLOUR_COMPONENT_CB; compID < compCount; ++compID)
+					if(!bsfile->isEndofile() && bsfile->getNalu(nalu[compID])) {
+						if(nalu[compID].getNalutype() == NALU_TYPE_IDR)
 							getSliceHeader(sps, pps, sliceInfo[compID], nalu[compID]);
-						} else 
-							return;
-				}
-
-				setParConfig();
-				decoderInit();
-
+					} else 
+						return;
+				
+				setSlcParConfig();
 				core->decode(cfgSlic, recFrame, nalu);
-			
+						
 				rec->require(move(buf));
 				conv->convertMacroblocksToImage(*recFrame, *rec);
 				buf = rec->release();
@@ -62,12 +60,12 @@ void DecoderTop::decode(FILE *bs, FILE *frec)
 
 				break;
 		}
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < compCount; i++)
 			nalu[i].clear();
 	}
 }
 
-void DecoderTop::setParConfig()
+void DecoderTop::setPicParConfig()
 {
 	/// set pic level config
 	cfgPic.chromaFormat = sps.chroma_format_idc;
@@ -117,22 +115,26 @@ void DecoderTop::setParConfig()
     cfgPic.scalingMatrix8x8Intra = &ScalingMatrixFlat8x8;
     cfgPic.scalingMatrix4x4Inter = &ScalingMatrixFlat4x4;
     cfgPic.scalingMatrix8x8Inter = &ScalingMatrixFlat8x8;
+}
 
+void DecoderTop::setSlcParConfig()
+{
 	/// set slice level config
 	cfgSlic.sliceType = sliceInfo[COLOUR_COMPONENT_Y].slice_type;
 	cfgSlic.idrPicId = (uint16_t)sliceInfo[COLOUR_COMPONENT_Y].pic_parameter_set_id;
 
 	cfgSlic.firstMbInSlice = sliceInfo[COLOUR_COMPONENT_Y].first_mb_in_slice;
 
-	cfgSlic.sliceQP[COLOUR_COMPONENT_Y] = pps.pic_init_qp_minus26 + 26 + sliceInfo[COLOUR_COMPONENT_Y].slice_qp_delta;
-	cfgSlic.disableDeblockingFilterIdc[COLOUR_COMPONENT_Y] = sliceInfo[COLOUR_COMPONENT_Y].disable_deblocking_filter_idc;
-	cfgSlic.sliceAlphaC0OffsetDiv2[COLOUR_COMPONENT_Y] = sliceInfo[COLOUR_COMPONENT_Y].slice_alpha_c0_offset_div2;
-	cfgSlic.sliceBetaOffsetDiv2[COLOUR_COMPONENT_Y] = sliceInfo[COLOUR_COMPONENT_Y].slice_beta_offset_div2;
-
-	for(uint8_t planeID = COLOUR_COMPONENT_CB; planeID < COLOUR_COMPONENT_COUNT; ++planeID)
-		cfgSlic.sliceQP[planeID] = sps.separate_colour_plane_flag?  pps.pic_init_qp_minus26 + 26 + sliceInfo[planeID].slice_qp_delta : cfgSlic.sliceQP[COLOUR_COMPONENT_Y];
-
-
+	for(uint8_t planeID = COLOUR_COMPONENT_Y; planeID < COLOUR_COMPONENT_COUNT; ++planeID) {
+		cfgSlic.sliceQP[planeID]                    = sps.separate_colour_plane_flag? (pps.pic_init_qp_minus26 + 26 + sliceInfo[planeID].slice_qp_delta) :
+																                      (pps.pic_init_qp_minus26 + 26 + sliceInfo[COLOUR_COMPONENT_Y].slice_qp_delta);
+		cfgSlic.disableDeblockingFilterIdc[planeID] = sps.separate_colour_plane_flag? sliceInfo[planeID].disable_deblocking_filter_idc :
+																					  sliceInfo[COLOUR_COMPONENT_Y].disable_deblocking_filter_idc;
+		cfgSlic.sliceAlphaC0OffsetDiv2[planeID]     = sps.separate_colour_plane_flag? sliceInfo[planeID].slice_alpha_c0_offset_div2 :
+																				      sliceInfo[COLOUR_COMPONENT_Y].slice_alpha_c0_offset_div2;
+		cfgSlic.sliceBetaOffsetDiv2[planeID]        = sps.separate_colour_plane_flag? sliceInfo[planeID].slice_beta_offset_div2 :
+																			          sliceInfo[COLOUR_COMPONENT_Y].slice_beta_offset_div2;
+	}
 }
 
 void DecoderTop::decoderInit()
@@ -143,10 +145,15 @@ void DecoderTop::decoderInit()
 	width = widthInMbs * 16 - cfgPic.cropInfo.leftOffset - cfgPic.cropInfo.rightOffset;
 	height = heightInMbs * 16 - cfgPic.cropInfo.topOffset - cfgPic.cropInfo.bottomOffset;
 
+	recFrame.reset(nullptr);
 	recFrame = std::make_unique<BlockyImage>(cfgPic.chromaFormat, widthInMbs, heightInMbs);
-	rec = new RawImage(RAW_IMAGE_PLANAR_FORMAT, cfgPic.chromaFormat, cfgPic.bitDepthY, false, true, width, height);
+	rec.reset(nullptr);
+	rec = std::make_unique<RawImage>(RAW_IMAGE_PLANAR_FORMAT, cfgPic.chromaFormat, cfgPic.bitDepthY, false, true, width, height);
+	buf.reset(nullptr);
 	buf = std::make_unique<uint8_t[]>(rec->getFrameSize());
-	conv = new MacroblockConverter(cfgPic.bitDepthY, cfgPic.cropInfo);
-	core = new DecoderCore(cfgPic);
+	conv.reset(nullptr);
+	conv = std::make_unique<MacroblockConverter>(cfgPic.bitDepthY, cfgPic.cropInfo);
+	core.reset(nullptr);
+	core = std::make_unique<DecoderCore>(cfgPic);
 
 }

@@ -1,0 +1,18 @@
+﻿  cabac.cpp
+  intra.cpp
+  quant.cpp
+  quant_common.cpp
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute8x8(enum ColourComponent,int const (&)[8][8],int (&)[8][8])const " (?compute8x8@InvQuantizer@@QEBAXW4ColourComponent@@AEAY177$$CBHAEAY177H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute4x4(enum ColourComponent,int const (&)[4][4],int (&)[4][4])const " (?compute4x4@InvQuantizer@@QEBAXW4ColourComponent@@AEAY133$$CBHAEAY133H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute4x4AC(enum ColourComponent,int const (&)[4][4],int (&)[4][4])const " (?compute4x4AC@InvQuantizer@@QEBAXW4ColourComponent@@AEAY133$$CBHAEAY133H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute4x4DC(enum ColourComponent,int const (&)[4][4],int (&)[4][4])const " (?compute4x4DC@InvQuantizer@@QEBAXW4ColourComponent@@AEAY133$$CBHAEAY133H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute2x4DC(enum ColourComponent,int const (&)[4][2],int (&)[4][2])const " (?compute2x4DC@InvQuantizer@@QEBAXW4ColourComponent@@AEAY131$$CBHAEAY131H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::compute2x2DC(enum ColourComponent,int const (&)[2][2],int (&)[2][2])const " (?compute2x2DC@InvQuantizer@@QEBAXW4ColourComponent@@AEAY111$$CBHAEAY111H@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::updateMacroblockQP(signed char,signed char,signed char)" (?updateMacroblockQP@InvQuantizer@@QEAAXCCC@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::updateMacroblockQP(signed char)" (?updateMacroblockQP@InvQuantizer@@QEAAXC@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::setScalingMatrices(unsigned char const (&)[4][4],unsigned char const (&)[8][8])" (?setScalingMatrices@InvQuantizer@@QEAAXAEAY133$$CBEAEAY177$$CBE@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::init(signed char,signed char,signed char)" (?init@InvQuantizer@@QEAAXCCC@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: void __cdecl InvQuantizer::init(signed char)" (?init@InvQuantizer@@QEAAXC@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "public: __cdecl InvQuantizer::InvQuantizer(unsigned char,unsigned char,signed char,signed char)" (??0InvQuantizer@@QEAA@EECC@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+quant_common.obj : warning LNK4006: "signed char __cdecl CalcQPChroma(signed char)" (?CalcQPChroma@@YACC@Z) 已在 quant_common.obj 中定义；已忽略第二个定义
+  Common.vcxproj -> F:\WORK_vip\R264_build\R264_codec\bulid\vs2019\x64\Release\Common.lib

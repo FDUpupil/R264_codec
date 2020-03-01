@@ -1,14 +1,10 @@
 #include"decoder/ec/cabad.h"
 #include"common/block.h"
 
-#define ORG_BS R"(org_bs.txt)"
-
+#include "decoder/defines.h"
 
 uint8_t CABAD::biariDecodeRegular(ColourComponent compID, uint16_t ctxIdx)
 {
-	//FILE* forg_bs;
-	//forg_bs = fopen(ORG_BS, "a");
-
     uint8_t     valMPS;
     uint16_t    range;
     uint16_t    rangeLPS;
@@ -19,42 +15,57 @@ uint8_t CABAD::biariDecodeRegular(ColourComponent compID, uint16_t ctxIdx)
     rangeLPS = ctxModel[compID].getRangeLPS(ctxIdx, range);
 
     binsVal = engine[compID].decodeRegular(valMPS, rangeLPS);
-	//printf("bit: %d | MPS: %d | LPS: %d | ctx: %d | range: %x \n", binsVal, valMPS, rangeLPS, ctxIdx, range);
-    ctxModel[compID].update(ctxIdx, binsVal);
+#ifdef DEBUG
+	FILE* forg_bs;
+	FILE* fed_info;
+	forg_bs = fopen(ORG_BS, "a");
+	fed_info = fopen(ED_INFO, "a");
 
-	//fprintf(forg_bs, "(%d)", binsVal);
-	//fclose(forg_bs);
-
+	fprintf(fed_info, "bit: %d | MPS: %d | LPS: %d | ctx: %d | range: %x \n", binsVal, valMPS, rangeLPS, ctxIdx, range);
+	fprintf(forg_bs, "(%d)", binsVal);
+	fclose(forg_bs);
+	fclose(fed_info);
+#endif
+	ctxModel[compID].update(ctxIdx, binsVal);
     return binsVal;
 }
 
 uint32_t CABAD::biariDecodeBypass(ColourComponent compID, uint8_t length)
 {
-	//FILE* forg_bs;
-	//forg_bs = fopen(ORG_BS, "a");
-
 	uint32_t     binsVal;
+	uint16_t    range = engine[compID].getRange();
 
 	binsVal = engine[compID].decodeBypass(length);
+#ifdef DEBUG
+	FILE* forg_bs;
+	FILE* fed_info;
+	forg_bs = fopen(ORG_BS, "a");
+	fed_info = fopen(ED_INFO, "a");
 
-	//fprintf(forg_bs, "[%d]", binsVal);
-	//fclose(forg_bs);
-
+	fprintf(fed_info, "bit: %d | range: %x \n", binsVal, range);
+	fprintf(forg_bs, "[%d]", binsVal);
+	fclose(forg_bs);
+	fclose(fed_info);
+#endif
 	return binsVal;
 }
 
 uint8_t CABAD::biariDecodeTerminate(ColourComponent compID)
 {
-	//FILE* forg_bs;
-	//forg_bs = fopen(ORG_BS, "a");
-
     uint8_t     binsVal;
-
+	uint16_t    range = engine[compID].getRange();
     binsVal = engine[compID].decodeTerminate();
+#ifdef DEBUG
+	FILE* forg_bs;
+	FILE* fed_info;
+	forg_bs = fopen(ORG_BS, "a");
+	fed_info = fopen(ED_INFO, "a");
 
-	//fprintf(forg_bs, "{%d}", binsVal);
-	//fclose(forg_bs);
-
+	fprintf(fed_info, "bit: %d | range: %x \n", binsVal, range);
+	fprintf(forg_bs, "{%d}", binsVal);
+	fclose(forg_bs);
+	fclose(fed_info);
+#endif
     return binsVal;
 
 }
